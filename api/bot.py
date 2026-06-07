@@ -49,9 +49,9 @@ async def telegram_webhook(request: Request):
                         "Привет.\n\n"
                         "Этот бот создает Google AI search ссылки.\n\n"
                         "Использование:\n"
-                        "@твойбот любой вопрос\n\n"
+                        "@qagooglebot любой вопрос\n\n"
                         "Пример:\n"
-                        "@твойбот почему небо голубое?"
+                        "@qagooglebot почему небо голубое?"
                     ),
                 },
             )
