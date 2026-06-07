@@ -5,6 +5,7 @@ import time
 import os
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 app = FastAPI()
 
@@ -25,12 +26,47 @@ def make_google_ai_url(query: str) -> str:
     return "https://www.google.com/search?" + urlencode(params)
 
 
+def ask_gemini(query: str) -> str:
+    response = requests.post(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemma-4-31b-it:generateContent",
+        params={
+            "key": GEMINI_API_KEY
+        },
+        json={
+            "contents": [
+                {
+                    "parts": [
+                        {
+                            "text": query
+                        }
+                    ]
+                }
+            ],
+            "tools": [
+                {
+                    "google_search": {}
+                }
+            ]
+        },
+        timeout=30,
+    )
+
+    response.raise_for_status()
+
+    data = response.json()
+
+    try:
+        return data["candidates"][0]["content"]["parts"][0]["text"]
+    except Exception:
+        return "Не удалось получить ответ."
+
+
 @app.post("/api/bot")
 async def telegram_webhook(request: Request):
     data = await request.json()
 
     # =========================
-    # /start command
+    # /start
     # =========================
 
     message = data.get("message")
@@ -47,7 +83,8 @@ async def telegram_webhook(request: Request):
                     "chat_id": chat_id,
                     "text": (
                         "Привет.\n\n"
-                        "Этот бот создает Google AI search ссылки.\n\n"
+                        "Этот бот отвечает через Gemini AI "
+                        "с поиском в интернете.\n\n"
                         "Использование:\n"
                         "@qagooglebot любой вопрос\n\n"
                         "Пример:\n"
@@ -66,18 +103,24 @@ async def telegram_webhook(request: Request):
         query = inline_query["query"]
         inline_query_id = inline_query["id"]
 
+        ai_answer = ask_gemini(query)
+
         url = make_google_ai_url(query)
 
-        markdown_link = f"[{query}]({url})"
+        message_text = (
+            f"{ai_answer}\n\n"
+            f"🔎 Google AI Search:\n"
+            f"[{query}]({url})"
+        )
 
         results = [
             {
                 "type": "article",
                 "id": "1",
                 "title": query,
-                "description": "Google AI Search",
+                "description": ai_answer[:100],
                 "input_message_content": {
-                    "message_text": markdown_link,
+                    "message_text": message_text,
                     "parse_mode": "Markdown"
                 }
             }
