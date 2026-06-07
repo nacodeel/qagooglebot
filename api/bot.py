@@ -27,38 +27,70 @@ def make_google_ai_url(query: str) -> str:
 
 
 def ask_gemini(query: str) -> str:
-    response = requests.post(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemma-4-31b-it:generateContent",
-        params={
-            "key": GEMINI_API_KEY
-        },
-        json={
-            "contents": [
-                {
-                    "parts": [
-                        {
-                            "text": query
-                        }
-                    ]
-                }
-            ],
-            "tools": [
-                {
-                    "google_search": {}
-                }
-            ]
-        },
-        timeout=30,
-    )
-
-    response.raise_for_status()
-
-    data = response.json()
-
     try:
-        return data["candidates"][0]["content"]["parts"][0]["text"]
-    except Exception:
-        return "Не удалось получить ответ."
+        response = requests.post(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+            params={
+                "key": GEMINI_API_KEY
+            },
+            json={
+                "contents": [
+                    {
+                        "parts": [
+                            {
+                                "text": (
+                                    "Ты отвечаешь в Telegram inline-боте.\n\n"
+
+                                    "Правила ответа:\n"
+                                    "- максимум 2-3 коротких абзаца\n"
+                                    "- максимум 600 символов\n"
+                                    "- простой и понятный язык\n"
+                                    "- без markdown\n"
+                                    "- без списков\n"
+                                    "- без нумерации\n"
+                                    "- без заголовков\n"
+                                    "- без рамок\n"
+                                    "- без эмодзи\n"
+                                    "- только сплошной текст с логическими абзацами\n"
+                                    "- отвечай кратко и по сути\n"
+                                    "- если информации мало, так и скажи\n\n"
+
+                                    f"Вопрос: {query}"
+                                )
+                            }
+                        ]
+                    }
+                ],
+                "tools": [
+                    {
+                        "google_search": {}
+                    }
+                ],
+                "generationConfig": {
+                    "maxOutputTokens": 220,
+                    "temperature": 0.7
+                }
+            },
+            timeout=10,
+        )
+
+        response.raise_for_status()
+
+        data = response.json()
+
+        text = data["candidates"][0]["content"]["parts"][0]["text"]
+
+        return text[:900]
+
+    except Exception as e:
+        print(e)
+
+        return (
+            "Не удалось быстро получить ответ от Gemini.\n"
+            "Используйте поиск ниже."
+        )
+
+
 
 
 @app.post("/api/bot")
