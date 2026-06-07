@@ -1,4 +1,3 @@
-```python
 from fastapi import FastAPI, Request
 from urllib.parse import urlencode
 import requests
@@ -61,4 +60,3 @@ async def telegram_webhook(request: Request):
         )
 
     return {"ok": True}
-```
