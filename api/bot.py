@@ -29,7 +29,7 @@ def make_google_ai_url(query: str) -> str:
 def ask_gemini(query: str) -> str:
     try:
         response = requests.post(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemma-4-31b-it:generateContent",
             params={
                 "key": GEMINI_API_KEY
             },
