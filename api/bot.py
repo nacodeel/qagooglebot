@@ -10,6 +10,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 app = FastAPI()
 
 
+
 def make_google_ai_url(query: str) -> str:
     params = {
         "q": query,
